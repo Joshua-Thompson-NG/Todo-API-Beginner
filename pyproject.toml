@@ -11,8 +11,7 @@ dependencies = [
     "fastapi[standard]>=0.159.0",
 ]
 
-[project.scripts]
-todo-api-beginner = "main:main"
+
 
 
 [dependency-groups]
