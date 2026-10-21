@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Query, Path
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal, Annotated
 
 app = FastAPI()
@@ -9,11 +9,18 @@ todo_db = {}
 next_id = 1
 
 
-class Todo(BaseModel):
-    title: str
+class TodoCreate(BaseModel):
+    title: str = Field(..., min_length=1)
     description: str | None = None
     priority: Literal["low", "medium", "high"] = "low"
     completed: bool = False
+
+class TodoRead(BaseModel):
+    id : int
+    title: str
+    description: str | None = None
+    priority: Literal["low", "medium", "high"]
+    completed: bool
 
 
 class TodoFilterParam(BaseModel):
@@ -22,15 +29,13 @@ class TodoFilterParam(BaseModel):
     completed: bool | None = None
     priority: Literal["low", "medium", "high"] | None = None
     search: str | None = None
-@app.post("/todos")
-def create_todo(todo: Todo):
+@app.post("/todos", response_model=TodoRead)
+def create_todo(todo: TodoCreate):
     global next_id
 
     todo_db[next_id] = todo
     response = {"id":next_id, **todo.model_dump()}
-
     next_id += 1
-
     return response
 @app.get("/todos")
 def get_todos(filters: Annotated[TodoFilterParam, Query()]):
@@ -54,7 +59,7 @@ def get_todos(filters: Annotated[TodoFilterParam, Query()]):
     return results
 
 
-@app.get("/todos/{todo_id}")
+@app.get("/todos/{todo_id}", response_model=TodoRead)
 def get_todos_id (todo_id: Annotated[int, Path(ge=1)]):
     result = todo_db.get(todo_id)
 
@@ -64,8 +69,8 @@ def get_todos_id (todo_id: Annotated[int, Path(ge=1)]):
     return {"error": "Todo not found"}
 
 
-@app.put("/todos/{todo_id}")
-def update_todo(todo: Todo, todo_id: Annotated[int, Path(ge=1)]):
+@app.put("/todos/{todo_id}", response_model=TodoRead)
+def update_todo(todo: TodoCreate, todo_id: Annotated[int, Path(ge=1)]):
     if todo_id not in todo_db:
         return {"error": "Todo not found"}
     todo_db[todo_id] = todo
