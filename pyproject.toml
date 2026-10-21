@@ -1,0 +1,22 @@
+[project]
+name = "todo-api-beginner"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Oluwatomi Thompson", email = "otjoshua549@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.159.0",
+]
+
+[project.scripts]
+todo-api-beginner = "main:main"
+
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
