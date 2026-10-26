@@ -100,6 +100,5 @@ This project currently uses an in-memory dictionary instead of a database, which
 ## Next Improvements
 - Add proper error handling with `HTTPException`
 - Return proper HTTP status codes
-- Add response models
 - Connect to SQLite or a database
 - Organize code into separate modules as the project grows

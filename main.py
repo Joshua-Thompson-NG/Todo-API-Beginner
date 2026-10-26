@@ -8,13 +8,14 @@ app = FastAPI()
 todo_db = {}
 next_id = 1
 
-
+# Request Model, when sending a request
 class TodoCreate(BaseModel):
-    title: str = Field(..., min_length=1)
-    description: str | None = None
+    title: str = Field(..., min_length=1, examples=["Washing Dishes"])
+    description: str | None = Field(default=None, examples=["Check If I have any dishes to wash today"])
     priority: Literal["low", "medium", "high"] = "low"
     completed: bool = False
 
+# Response Model, how a response is meant to look like
 class TodoRead(BaseModel):
     id : int
     title: str
