@@ -64,5 +64,6 @@ def test_delete_todo():
     assert response.status_code == 200
     assert response.json() == {"Delete Operation": "Success"}
 
-    response2 =client.get("/todos/1")
-    assert response2.json() == {"error": "Todo not found"}
+    response2 =client.get("/todos/999")
+    assert response2.status_code == 404
+    assert response2.json() == {"detail": "Todo not found"}

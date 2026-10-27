@@ -98,7 +98,6 @@ pytest
 This project currently uses an in-memory dictionary instead of a database, which is a great beginner approach for learning API structure and validation before adding SQLite or an ORM.
 
 ## Next Improvements
-- Add proper error handling with `HTTPException`
 - Return proper HTTP status codes
 - Connect to SQLite or a database
 - Organize code into separate modules as the project grows

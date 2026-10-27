@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path
+from fastapi import FastAPI, Query, Path, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Literal, Annotated
 
@@ -8,14 +8,14 @@ app = FastAPI()
 todo_db = {}
 next_id = 1
 
-# Request Model, when sending a request
+# Request Model when sending a request
 class TodoCreate(BaseModel):
     title: str = Field(..., min_length=1, examples=["Washing Dishes"])
     description: str | None = Field(default=None, examples=["Check If I have any dishes to wash today"])
     priority: Literal["low", "medium", "high"] = "low"
     completed: bool = False
 
-# Response Model, how a response is meant to look like
+# Response Model, what a response is meant to look like
 class TodoRead(BaseModel):
     id : int
     title: str
@@ -30,7 +30,7 @@ class TodoFilterParam(BaseModel):
     completed: bool | None = None
     priority: Literal["low", "medium", "high"] | None = None
     search: str | None = None
-@app.post("/todos", response_model=TodoRead)
+@app.post("/todos", response_model=TodoRead, status_code=status.HTTP_201_CREATED    )
 def create_todo(todo: TodoCreate):
     global next_id
 
@@ -64,8 +64,9 @@ def get_todos(filters: Annotated[TodoFilterParam, Query()]):
 def get_todos_id (todo_id: Annotated[int, Path(ge=1)]):
     result = todo_db.get(todo_id)
 
-    if result:
-        return result
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Todo not found")
 
     return {"error": "Todo not found"}
 
@@ -73,7 +74,8 @@ def get_todos_id (todo_id: Annotated[int, Path(ge=1)]):
 @app.put("/todos/{todo_id}", response_model=TodoRead)
 def update_todo(todo: TodoCreate, todo_id: Annotated[int, Path(ge=1)]):
     if todo_id not in todo_db:
-        return {"error": "Todo not found"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Todo not found")
     todo_db[todo_id] = todo
     response = {"id": todo_id, **todo.model_dump()}
 
@@ -82,7 +84,8 @@ def update_todo(todo: TodoCreate, todo_id: Annotated[int, Path(ge=1)]):
 @app.delete("/todos/{todo_id}")
 def delete_todo(todo_id: Annotated[int, Path(ge=1)]):
     if todo_id not in todo_db:
-        return {"error": "Todo not found"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Todo not found")
     todo_db.pop(todo_id, None)
 
     return {"Delete Operation":"Success"}
