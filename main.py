@@ -68,7 +68,7 @@ def get_todos_id (todo_id: Annotated[int, Path(ge=1)]):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Todo not found")
 
-    return {"error": "Todo not found"}
+    return result
 
 
 @app.put("/todos/{todo_id}", response_model=TodoRead)
