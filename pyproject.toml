@@ -3,7 +3,7 @@ name = "todo-api-beginner"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi[starndard]>=0.162.0",
+    "fastapi[standard]>=0.162.0",
 ]
 
 [dependency-groups]
