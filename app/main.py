@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
-
-from fastapi import FastAPI, HTTPException, Query, status, Path
-from pydantic import BaseModel, Field
 from typing import Literal
+
+from fastapi import FastAPI, HTTPException, Path, Query, status
+from pydantic import BaseModel, Field, field_validator
 
 app = FastAPI()
 
@@ -16,6 +16,10 @@ class TodoCreate(BaseModel):
     description: str | None = Field(default=None, max_length=500,
                                     description="Optional Detailed Description",
                                     examples=["Check If I have any dishes to wash today"])  # noqa: E501
+    @field_validator("title",mode="before")
+    @classmethod
+    def strip_title(cls, value:object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
 # Input for PUT
 class TodoReplace(BaseModel):
@@ -23,11 +27,21 @@ class TodoReplace(BaseModel):
     description: str | None = Field(default=None, max_length=500)
     done: bool = Field(..., description="The status of a todo.")
 
+    @field_validator("title", mode="before")
+    @classmethod
+    def strip_title(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
 # Input for PATCH
 class TodoPatch(BaseModel):
     title: str | None = Field(default=None,min_length=1,max_length=100)
     description: str | None = Field(default=None, max_length=500)
     done: bool | None = None
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def strip_title(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
 # Output for responses
 class TodoPublic(BaseModel):
@@ -68,7 +82,7 @@ def create_todo(payload: TodoCreate):
 def list_all_todos(
         done: bool | None = Query(None,
                                   description="Filter by status of todo."),
-        sort: Literal["asc", "dsc"] = Query("asc",
+        sort: Literal["asc", "desc"] = Query("asc",
                                     description="Sort by ID chronological order.")
         ):
 
@@ -111,11 +125,35 @@ def replace_todo(payload: TodoReplace,
         "created_at": existing_id["created_at"]
     }
 
+    todo_db[id]= update_todo
+    return update_todo
 
 @app.patch("/todos/{id}", response_model=TodoPublic, status_code=status.HTTP_200_OK)
-def partially_update():
-    pass
+def partially_update(payload: TodoPatch,
+                     id: int = Path(ge=1,
+                description="The ID of the todo item to partially modify")):
+    if id not in todo_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="ID not found"
+        )
 
-@app.delete("/todos/{id}")
-def delete_todo():
-    pass
+    existing_id = todo_db[id]
+
+    update_todo = payload.model_dump(exclude_unset=True)
+
+    for key, value in update_todo.items():
+        existing_id[key] = value
+
+    return existing_id
+
+@app.delete("/todos/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_todo(id : int = Path(...,ge=1,
+                            description="The ID of the todo item to delete")):
+    if id not in todo_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="ID not found"
+        )
+
+    del todo_db[id]
+    return None
+
