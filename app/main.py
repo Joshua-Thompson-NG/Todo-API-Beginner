@@ -61,10 +61,6 @@ current_id=1
 def create_todo(payload: TodoCreate):
     global current_id
 
-    # Rule 1: title cannot be empty
-    if not payload.title:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,detail="Title cannot be empty.")
-
     new_todo = {
         "id": current_id,
         "title": payload.title,
@@ -109,6 +105,7 @@ def get_todo(id: int = Path(...,ge=1,
 @app.put("/todos/{id}", response_model=TodoPublic, status_code=status.HTTP_200_OK)
 def replace_todo(payload: TodoReplace,
                  id: int = Path(...,
+                                ge=1,
                  description="The ID of the todo item to replace completely")):
     if id not in todo_db:
         raise HTTPException(
